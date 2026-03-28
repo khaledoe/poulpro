@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(MANAGER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  WORKER
+}
+
+model Poulailler {
+  id          String     @id @default(cuid())
+  nom         String
+  capacite    Int
+  description String?
+  actif       Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  troupeaux   Troupeau[]
+}
+
+model Troupeau {
+  id            String               @id @default(cuid())
+  nom           String
+  race          String
+  nombreDebut   Int
+  nombreActuel  Int
+  dateArrivee   DateTime
+  dateReforme   DateTime?
+  actif         Boolean              @default(true)
+  poulaillerId  String
+  poulailler    Poulailler           @relation(fields: [poulaillerId], references: [id])
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  productions   Production[]
+  mortalites    Mortalite[]
+  consommations ConsommationAliment[]
+}
+
+model Production {
+  id          String   @id @default(cuid())
+  date        DateTime @db.Date
+  troupeauId  String
+  troupeau    Troupeau @relation(fields: [troupeauId], references: [id])
+  oeufsTotaux Int
+  oeufsCasses Int      @default(0)
+  oeufsSales  Int      @default(0)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([date, troupeauId])
+}
+
+model Mortalite {
+  id         String   @id @default(cuid())
+  date       DateTime @db.Date
+  troupeauId String
+  troupeau   Troupeau @relation(fields: [troupeauId], references: [id])
+  nombre     Int
+  cause      String?
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Aliment {
+  id            String               @id @default(cuid())
+  nom           String
+  unite         String               @default("kg")
+  stockActuel   Float                @default(0)
+  seuilAlerte   Float                @default(100)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  achats        AchatAliment[]
+  consommations ConsommationAliment[]
+}
+
+model AchatAliment {
+  id           String   @id @default(cuid())
+  date         DateTime @db.Date
+  alimentId    String
+  aliment      Aliment  @relation(fields: [alimentId], references: [id])
+  quantite     Float
+  prixUnitaire Float
+  fournisseur  String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ConsommationAliment {
+  id         String   @id @default(cuid())
+  date       DateTime @db.Date
+  alimentId  String
+  aliment    Aliment  @relation(fields: [alimentId], references: [id])
+  troupeauId String
+  troupeau   Troupeau @relation(fields: [troupeauId], references: [id])
+  quantite   Float
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  nom       String
+  telephone String?
+  email     String?
+  adresse   String?
+  actif     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ventes    Vente[]
+}
+
+model Vente {
+  id          String      @id @default(cuid())
+  date        DateTime    @db.Date
+  clientId    String
+  client      Client      @relation(fields: [clientId], references: [id])
+  lignes      LigneVente[]
+  total       Float
+  montantPaye Float       @default(0)
+  statut      StatutVente @default(EN_ATTENTE)
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model LigneVente {
+  id           String @id @default(cuid())
+  venteId      String
+  vente        Vente  @relation(fields: [venteId], references: [id], onDelete: Cascade)
+  produit      String
+  quantite     Float
+  prixUnitaire Float
+  total        Float
+}
+
+enum StatutVente {
+  EN_ATTENTE
+  PAYEE
+  PARTIELLE
+  ANNULEE
+}
