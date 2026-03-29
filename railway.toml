@@ -2,7 +2,7 @@
 builder = "dockerfile"
 
 [deploy]
-startCommand = "npm start"
+startCommand = "node_modules/.bin/prisma migrate deploy && node_modules/.bin/next start"
 healthcheckPath = "/api/health"
 restartPolicyType = "on_failure"
 
