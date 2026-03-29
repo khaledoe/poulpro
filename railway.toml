@@ -2,7 +2,7 @@
 builder = "dockerfile"
 
 [deploy]
-startCommand = "node_modules/.bin/prisma migrate deploy && node_modules/.bin/next start"
+startCommand = "node_modules/.bin/prisma db push --accept-data-loss && node_modules/.bin/next start"
 healthcheckPath = "/api/health"
 restartPolicyType = "on_failure"
 
